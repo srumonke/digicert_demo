@@ -1,0 +1,13 @@
+connector:
+  name: Kubernetes Prod Cluster
+  identifier: k8s_prod_connector
+  description: Production Kubernetes cluster
+  orgIdentifier: default
+  projectIdentifier: Digicert
+  type: K8sCluster
+  spec:
+    credential:
+      type: InheritFromDelegate
+      spec:
+        delegateSelectors:
+          - <YOUR_PROD_DELEGATE_SELECTOR>

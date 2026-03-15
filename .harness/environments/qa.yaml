@@ -1,0 +1,9 @@
+environment:
+  name: qa
+  identifier: qa
+  description: QA/Testing environment
+  tags: {}
+  type: PreProduction
+  orgIdentifier: default
+  projectIdentifier: Digicert
+  variables: []

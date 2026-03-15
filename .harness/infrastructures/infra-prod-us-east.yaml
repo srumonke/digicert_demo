@@ -1,0 +1,15 @@
+infrastructureDefinition:
+  name: infra-prod-us-east
+  identifier: infraproduseast
+  description: Production infrastructure in US East
+  tags: {}
+  orgIdentifier: default
+  projectIdentifier: Digicert
+  environmentRef: prod
+  deploymentType: Kubernetes
+  type: KubernetesDirect
+  spec:
+    connectorRef: k8s_prod_connector
+    namespace: prod-us-east
+    releaseName: release-<+INFRA_KEY>
+  allowSimultaneousDeployments: false

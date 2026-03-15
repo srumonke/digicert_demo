@@ -1,0 +1,368 @@
+template:
+  name: progressive-canary-template
+  identifier: progressivecanarytemplate
+  versionLabel: "1"
+  type: Pipeline
+  projectIdentifier: Digicert
+  orgIdentifier: default
+  tags: {}
+  spec:
+    stages:
+      - stage:
+          name: Dev Deploy
+          identifier: Dev_Deploy
+          type: Deployment
+          tags: {}
+          failureStrategies:
+            - onFailure:
+                errors:
+                  - AllErrors
+                action:
+                  type: StageRollback
+          spec:
+            deploymentType: Kubernetes
+            service:
+              serviceRef: <+input>
+              serviceInputs: <+input>
+            environments:
+              metadata:
+                parallel: true
+              values:
+                - environmentRef: dev
+                  deployToAll: false
+                  infrastructureDefinitions:
+                    - identifier: <+pipeline.variables.devInfra1>
+                    - identifier: <+pipeline.variables.devInfra2>
+            execution:
+              steps:
+                - stepGroup:
+                    name: Canary
+                    identifier: canary
+                    steps:
+                      - step:
+                          name: Canary 50
+                          identifier: Canary_50
+                          type: K8sCanaryDeploy
+                          timeout: 10m
+                          spec:
+                            instanceSelection:
+                              type: Percentage
+                              spec:
+                                percentage: 50
+                            skipDryRun: false
+                      - step:
+                          name: Continuous Verification
+                          identifier: CV_Dev
+                          type: Verify
+                          timeout: 15m
+                          spec:
+                            type: Rolling
+                            monitoredServiceRef: <+monitoredService.identifier>
+                            healthSources: []
+                            spec:
+                              duration: 15m
+                              sensitivity: LOW
+                          failureStrategies:
+                            - onFailure:
+                                errors:
+                                  - Verification
+                                action:
+                                  type: ManualIntervention
+                                  spec:
+                                    timeout: 1h
+                                    onTimeout:
+                                      action:
+                                        type: StageRollback
+                      - step:
+                          name: Canary Delete
+                          identifier: Canary_Delete
+                          type: K8sCanaryDelete
+                          timeout: 10m
+                          spec: {}
+                - stepGroup:
+                    name: Primary Rollout
+                    identifier: primary_rollout
+                    steps:
+                      - step:
+                          name: Rolling Deploy
+                          identifier: Rolling_Deploy
+                          type: K8sRollingDeploy
+                          timeout: 10m
+                          spec:
+                            skipDryRun: false
+              rollbackSteps:
+                - step:
+                    name: Canary Delete
+                    identifier: Rollback_Canary_Delete
+                    type: K8sCanaryDelete
+                    timeout: 10m
+                    spec: {}
+                - step:
+                    name: Rolling Rollback
+                    identifier: Rolling_Rollback
+                    type: K8sRollingRollback
+                    timeout: 10m
+                    spec: {}
+      - stage:
+          name: QA Deploy
+          identifier: QA_Deploy
+          type: Deployment
+          tags: {}
+          failureStrategies:
+            - onFailure:
+                errors:
+                  - AllErrors
+                action:
+                  type: StageRollback
+          spec:
+            deploymentType: Kubernetes
+            service:
+              useFromStage:
+                stage: Dev_Deploy
+            environment:
+              environmentRef: qa
+              deployToAll: false
+              infrastructureDefinitions:
+                - identifier: <+pipeline.variables.qaInfra>
+            execution:
+              steps:
+                - stepGroup:
+                    name: Canary
+                    identifier: canary
+                    steps:
+                      - step:
+                          name: Canary 50
+                          identifier: Canary_50
+                          type: K8sCanaryDeploy
+                          timeout: 10m
+                          spec:
+                            instanceSelection:
+                              type: Percentage
+                              spec:
+                                percentage: 50
+                            skipDryRun: false
+                      - step:
+                          name: Continuous Verification
+                          identifier: CV_QA
+                          type: Verify
+                          timeout: 15m
+                          spec:
+                            type: Rolling
+                            monitoredServiceRef: <+monitoredService.identifier>
+                            healthSources: []
+                            spec:
+                              duration: 15m
+                              sensitivity: MEDIUM
+                          failureStrategies:
+                            - onFailure:
+                                errors:
+                                  - Verification
+                                action:
+                                  type: ManualIntervention
+                                  spec:
+                                    timeout: 1h
+                                    onTimeout:
+                                      action:
+                                        type: StageRollback
+                      - step:
+                          name: Integration Tests
+                          identifier: Integration_Tests
+                          type: ShellScript
+                          timeout: 20m
+                          when:
+                            stageStatus: Success
+                            condition: <+pipeline.variables.runIntegrationTests> == "yes"
+                          spec:
+                            shell: Bash
+                            executionTarget:
+                              type: DelegateSelected
+                            source:
+                              type: Inline
+                              spec:
+                                script: |
+                                  echo "Running integration tests for <+service.name>"
+                                  # your test runner command here
+                                  # e.g. ./gradlew integrationTest
+                                  # or   npm run test:integration
+                            environmentVariables: []
+                            outputVariables: []
+                      - step:
+                          name: Canary Delete
+                          identifier: Canary_Delete
+                          type: K8sCanaryDelete
+                          timeout: 10m
+                          spec: {}
+                - stepGroup:
+                    name: Primary Rollout
+                    identifier: primary_rollout
+                    steps:
+                      - step:
+                          name: Rolling Deploy
+                          identifier: Rolling_Deploy
+                          type: K8sRollingDeploy
+                          timeout: 10m
+                          spec:
+                            skipDryRun: false
+              rollbackSteps:
+                - step:
+                    name: Canary Delete
+                    identifier: Rollback_Canary_Delete
+                    type: K8sCanaryDelete
+                    timeout: 10m
+                    spec: {}
+                - step:
+                    name: Rolling Rollback
+                    identifier: Rolling_Rollback
+                    type: K8sRollingRollback
+                    timeout: 10m
+                    spec: {}
+      - stage:
+          name: Prod Deploy
+          identifier: Prod_Deploy
+          type: Deployment
+          tags: {}
+          failureStrategies:
+            - onFailure:
+                errors:
+                  - AllErrors
+                action:
+                  type: StageRollback
+          spec:
+            deploymentType: Kubernetes
+            service:
+              useFromStage:
+                stage: Dev_Deploy
+            environment:
+              environmentRef: prod
+              deployToAll: false
+              infrastructureDefinitions:
+                - identifier: <+pipeline.variables.prodInfra>
+            execution:
+              steps:
+                - stepGroup:
+                    name: Canary
+                    identifier: canary
+                    steps:
+                      - step:
+                          name: Canary 25
+                          identifier: Canary_25
+                          type: K8sCanaryDeploy
+                          timeout: 10m
+                          spec:
+                            instanceSelection:
+                              type: Percentage
+                              spec:
+                                percentage: 25
+                            skipDryRun: false
+                      - step:
+                          name: Continuous Verification
+                          identifier: CV_Prod
+                          type: Verify
+                          timeout: 30m
+                          spec:
+                            type: Rolling
+                            monitoredServiceRef: <+monitoredService.identifier>
+                            healthSources: []
+                            spec:
+                              duration: 30m
+                              sensitivity: HIGH
+                          failureStrategies:
+                            - onFailure:
+                                errors:
+                                  - Verification
+                                action:
+                                  type: ManualIntervention
+                                  spec:
+                                    timeout: 1h
+                                    onTimeout:
+                                      action:
+                                        type: StageRollback
+                      - step:
+                          name: Load Tests
+                          identifier: Load_Tests
+                          type: ShellScript
+                          timeout: 30m
+                          when:
+                            stageStatus: Success
+                            condition: <+pipeline.variables.runLoadTests> == "yes"
+                          spec:
+                            shell: Bash
+                            executionTarget:
+                              type: DelegateSelected
+                            source:
+                              type: Inline
+                              spec:
+                                script: |
+                                  echo "Running load tests for <+service.name>"
+                                  # your load test command here
+                                  # e.g. k6 run load-test.js
+                                  # or   artillery run load-test.yaml
+                            environmentVariables: []
+                            outputVariables: []
+                      - step:
+                          name: Canary Delete
+                          identifier: Canary_Delete
+                          type: K8sCanaryDelete
+                          timeout: 10m
+                          spec: {}
+                - stepGroup:
+                    name: Primary Rollout
+                    identifier: primary_rollout
+                    steps:
+                      - step:
+                          name: Rolling Deploy
+                          identifier: Rolling_Deploy
+                          type: K8sRollingDeploy
+                          timeout: 10m
+                          spec:
+                            skipDryRun: false
+              rollbackSteps:
+                - step:
+                    name: Canary Delete
+                    identifier: Rollback_Canary_Delete
+                    type: K8sCanaryDelete
+                    timeout: 10m
+                    spec: {}
+                - step:
+                    name: Rolling Rollback
+                    identifier: Rolling_Rollback
+                    type: K8sRollingRollback
+                    timeout: 10m
+                    spec: {}
+    variables:
+      - name: devInfra1
+        type: String
+        description: First Dev infrastructure definition (e.g. infra-dev-us-east)
+        required: true
+        value: <+input>
+      - name: devInfra2
+        type: String
+        description: Second Dev infrastructure definition (e.g. infra-dev-us-west)
+        required: true
+        value: <+input>
+      - name: qaInfra
+        type: String
+        description: QA infrastructure definition (e.g. infra-qa-us-east)
+        required: true
+        value: <+input>
+      - name: prodInfra
+        type: String
+        description: Prod infrastructure definition (e.g. infra-prod-us-east)
+        required: true
+        value: <+input>
+      - name: tag
+        type: String
+        description: Docker image tag to deploy
+        required: true
+        value: <+input>
+      - name: runIntegrationTests
+        type: String
+        description: Run integration tests in QA? (yes/no)
+        required: true
+        value: <+input>.allowedValues(yes,no)
+      - name: runLoadTests
+        type: String
+        description: Run load tests in Prod? (yes/no)
+        required: true
+        value: <+input>.allowedValues(yes,no)
+    allowStageExecutions: true

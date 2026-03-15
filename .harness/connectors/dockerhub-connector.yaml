@@ -1,0 +1,18 @@
+connector:
+  name: DockerHub Connector
+  identifier: dockerhub_connector
+  description: Docker registry connector
+  orgIdentifier: default
+  projectIdentifier: Digicert
+  type: DockerRegistry
+  spec:
+    dockerRegistryUrl: https://index.docker.io/v2/
+    providerType: DockerHub
+    auth:
+      type: UsernamePassword
+      spec:
+        username: <YOUR_DOCKERHUB_USERNAME>
+        passwordRef: dockerhub_password
+    delegateSelectors:
+      - <YOUR_DELEGATE_SELECTOR>
+    executeOnDelegate: true

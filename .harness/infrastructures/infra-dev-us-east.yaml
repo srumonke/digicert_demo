@@ -1,0 +1,15 @@
+infrastructureDefinition:
+  name: infra-dev-us-east
+  identifier: infradevuseast
+  description: Dev infrastructure in US East
+  tags: {}
+  orgIdentifier: default
+  projectIdentifier: Digicert
+  environmentRef: dev
+  deploymentType: Kubernetes
+  type: KubernetesDirect
+  spec:
+    connectorRef: k8s_dev_connector
+    namespace: dev-us-east
+    releaseName: release-<+INFRA_KEY>
+  allowSimultaneousDeployments: true

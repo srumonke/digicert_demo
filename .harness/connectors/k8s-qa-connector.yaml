@@ -1,0 +1,13 @@
+connector:
+  name: Kubernetes QA Cluster
+  identifier: k8s_qa_connector
+  description: QA Kubernetes cluster
+  orgIdentifier: default
+  projectIdentifier: Digicert
+  type: K8sCluster
+  spec:
+    credential:
+      type: InheritFromDelegate
+      spec:
+        delegateSelectors:
+          - <YOUR_QA_DELEGATE_SELECTOR>

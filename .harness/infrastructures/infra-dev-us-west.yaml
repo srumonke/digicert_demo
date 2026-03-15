@@ -1,0 +1,15 @@
+infrastructureDefinition:
+  name: infra-dev-us-west
+  identifier: infradevuswest
+  description: Dev infrastructure in US West
+  tags: {}
+  orgIdentifier: default
+  projectIdentifier: Digicert
+  environmentRef: dev
+  deploymentType: Kubernetes
+  type: KubernetesDirect
+  spec:
+    connectorRef: k8s_dev_connector
+    namespace: dev-us-west
+    releaseName: release-<+INFRA_KEY>
+  allowSimultaneousDeployments: true

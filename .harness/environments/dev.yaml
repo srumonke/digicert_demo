@@ -1,0 +1,9 @@
+environment:
+  name: dev
+  identifier: dev
+  description: Development environment
+  tags: {}
+  type: PreProduction
+  orgIdentifier: default
+  projectIdentifier: Digicert
+  variables: []

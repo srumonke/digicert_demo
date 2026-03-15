@@ -1,0 +1,13 @@
+connector:
+  name: Kubernetes Dev Cluster
+  identifier: k8s_dev_connector
+  description: Development Kubernetes cluster
+  orgIdentifier: default
+  projectIdentifier: Digicert
+  type: K8sCluster
+  spec:
+    credential:
+      type: InheritFromDelegate
+      spec:
+        delegateSelectors:
+          - <YOUR_DEV_DELEGATE_SELECTOR>

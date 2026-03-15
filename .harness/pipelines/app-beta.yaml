@@ -1,0 +1,40 @@
+pipeline:
+  name: app-beta
+  identifier: appbeta
+  projectIdentifier: Digicert
+  orgIdentifier: default
+  tags: {}
+  template:
+    templateRef: progressivecanarytemplate
+    versionLabel: "1"
+    templateInputs:
+      stages:
+        - stage:
+            identifier: Dev_Deploy
+            type: Deployment
+            spec:
+              service:
+                serviceRef: app-beta-service
+                serviceInputs: <+input>
+      variables:
+        - name: devInfra1
+          type: String
+          value: <+input>
+        - name: devInfra2
+          type: String
+          value: <+input>
+        - name: qaInfra
+          type: String
+          value: <+input>
+        - name: prodInfra
+          type: String
+          value: <+input>
+        - name: tag
+          type: String
+          value: <+input>
+        - name: runIntegrationTests
+          type: String
+          value: <+input>.allowedValues(yes,no)
+        - name: runLoadTests
+          type: String
+          value: <+input>.allowedValues(yes,no)

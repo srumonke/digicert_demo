@@ -1,0 +1,25 @@
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.key
+*.pem
+secrets/
+.env
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Temporary files
+*.tmp
+*.log

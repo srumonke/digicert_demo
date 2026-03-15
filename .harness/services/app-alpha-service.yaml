@@ -1,0 +1,33 @@
+service:
+  name: app-alpha-service
+  identifier: app-alpha-service
+  tags: {}
+  serviceDefinition:
+    spec:
+      manifests:
+        - manifest:
+            identifier: k8s-manifests
+            type: K8sManifest
+            spec:
+              store:
+                type: Github
+                spec:
+                  connectorRef: github_connector
+                  gitFetchType: Branch
+                  paths:
+                    - manifests/app-alpha
+                  repoName: digicert_demo
+                  branch: main
+              skipResourceVersioning: false
+              enableDeclarativeRollback: false
+      artifacts:
+        primary:
+          primaryArtifactRef: <+input>
+          sources:
+            - spec:
+                connectorRef: dockerhub_connector
+                imagePath: <+input>
+                tag: <+pipeline.variables.tag>
+              identifier: app_alpha_image
+              type: DockerRegistry
+    type: Kubernetes

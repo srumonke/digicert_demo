@@ -1,0 +1,9 @@
+environment:
+  name: prod
+  identifier: prod
+  description: Production environment
+  tags: {}
+  type: Production
+  orgIdentifier: default
+  projectIdentifier: Digicert
+  variables: []

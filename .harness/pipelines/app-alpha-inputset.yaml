@@ -1,0 +1,39 @@
+inputSet:
+  name: app-alpha-inputset
+  tags: {}
+  identifier: appalphainputset
+  orgIdentifier: default
+  projectIdentifier: Digicert
+  pipeline:
+    identifier: appalpha
+    template:
+      templateInputs:
+        stages:
+          - stage:
+              identifier: Dev_Deploy
+              type: Deployment
+              spec:
+                service:
+                  serviceInputs: ""
+        variables:
+          - name: devInfra1
+            type: String
+            value: ""
+          - name: devInfra2
+            type: String
+            value: ""
+          - name: qaInfra
+            type: String
+            value: ""
+          - name: prodInfra
+            type: String
+            value: ""
+          - name: tag
+            type: String
+            value: ""
+          - name: runIntegrationTests
+            type: String
+            value: ""
+          - name: runLoadTests
+            type: String
+            value: ""
